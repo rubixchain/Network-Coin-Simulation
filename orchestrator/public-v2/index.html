@@ -174,12 +174,12 @@ function Field({ label, info, width, children }){
   return (<div className="field"><div className="flabel">{label}<Info text={info}/></div>{React.cloneElement(children, { style: { width: width||72, ...(children.props.style||{}) } })}</div>);
 }
 
-function StageRail({ status, busy, onRun, params, setParams }){
+function StageRail({ status, busy, onRun, params, setParams, tokenName }){
   const stages = [
     { n:1, nm:"Issue", ds:"Mint the single loyalty token on node1 (the issuer).",
       ctrl:(<div className="fields">
-        <Field label="Token" width={88} info="Name of the loyalty token to mint. Every brand shares this one token (e.g. LOYALTY).">
-          <input value={params.tokenName} onChange={e=>setParams({...params,tokenName:e.target.value})}/>
+        <Field label="Token (auto)" width={104} info="The token name is assigned automatically and is unique per session — it bumps to LOYALTY-1, LOYALTY-2, … on each Reset so demos never collide. You can't edit it.">
+          <input value={tokenName} readOnly tabIndex={-1} style={{cursor:"default",background:"var(--panel2)"}}/>
         </Field>
         <Field label="Count" info="How many loyalty points to mint in this batch on the issuer (node1).">
           <input value={params.count} onChange={e=>setParams({...params,count:e.target.value})}/>
@@ -415,7 +415,7 @@ function App(){
       }catch(e){}
     }, 350);
     try{
-      const body = n===1 ? {tokenName:params.tokenName,count:Number(params.count), ...(params.startIndex!==""?{startIndex:Number(params.startIndex)}:{})}
+      const body = n===1 ? {count:Number(params.count), ...(params.startIndex!==""?{startIndex:Number(params.startIndex)}:{})}
         : n===3 ? {numCustomers:Number(params.numCustomers),maxPerAward:5,seed:Number(params.seed)}
         : n===4 ? {seed:Number(params.seed)} : {};
       const r = await post("/api/stage/"+n, body);
@@ -465,14 +465,14 @@ function App(){
           </div>
         </div>
         <div className="pills">
-          <span className="pill tok">token <b style={{fontWeight:700,letterSpacing:".2px"}}>{state.token?.name||"—"}</b></span>
+          <span className="pill tok">token <b style={{fontWeight:700,letterSpacing:".2px"}}>{state.token?.name||state.sessionToken||"—"}</b></span>
           <span className="pill">brands 5</span>
           <span className="pill">customers {totalCust}</span>
           <button className="ghost" disabled={busy!==0} onClick={reset}>Reset demo</button>
         </div>
       </div>
 
-      <StageRail status={status} busy={busy} onRun={runStage} params={params} setParams={setParams} />
+      <StageRail status={status} busy={busy} onRun={runStage} params={params} setParams={setParams} tokenName={state.token?.name || state.sessionToken || "LOYALTY"} />
       {toast && <div className={"toast "+(toast.ok?"ok":"bad")}>{toast.msg}</div>}
 
       <div className="layout" style={{marginTop:14}}>

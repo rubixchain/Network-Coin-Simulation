@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
   initState, runStage1, runStage2, runStage3, runStage4, runStage5,
-  computeSettlement, liveHoldings,
+  computeSettlement, liveHoldings, sessionTokenName,
 } from "./stages.mjs";
 import { mintFT, transferFT, PASSWORD } from "./rubix.mjs";
 
@@ -58,6 +58,7 @@ app.get("/api/state", (_req, res) => {
     })),
     stageStatus: state.stageStatus,
     customerCount: state.customers.length,
+    sessionToken: sessionTokenName(state), // server-assigned token name for this session
   });
 });
 
@@ -88,15 +89,18 @@ app.post("/api/reset", (_req, res) => {
   // preserve the on-chain FT index cursor so re-mints never collide with
   // tokens already on-chain (older state may not have mintCursor yet)
   const cursor = state.mintCursor ?? state.token?.minted ?? 0;
+  // bump the session token counter so the next session mints a new unique name
+  const tokenSeq = (state.tokenSeq ?? 0) + 1;
   // issuer + brands are persistent entities — keep any aliases the user set
   const issuerAlias = state.issuer?.alias;
   const brandAliases = Object.fromEntries((state.brands || []).filter((b) => b.alias).map((b) => [b.id, b.alias]));
   state = initState(registry);
   state.mintCursor = cursor;
+  state.tokenSeq = tokenSeq;
   if (issuerAlias) state.issuer.alias = issuerAlias;
   state.brands.forEach((b) => { if (brandAliases[b.id]) b.alias = brandAliases[b.id]; });
   save();
-  res.json({ status: true, message: `demo state reset (mint index cursor preserved at ${cursor})` });
+  res.json({ status: true, message: `demo state reset — next token: ${sessionTokenName(state)}` });
 });
 
 // set a display alias for a brand or customer

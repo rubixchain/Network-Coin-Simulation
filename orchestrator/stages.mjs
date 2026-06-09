@@ -56,6 +56,9 @@ export function initState(registry) {
     // the same token on the same issuer must continue past the last used index.
     // Preserved across /api/reset so it always reflects on-chain reality.
     mintCursor: 0,
+    // session counter -> token name. 0 = LOYALTY, 1 = LOYALTY-1, ... bumped on
+    // each reset so every demo session mints a uniquely-named token.
+    tokenSeq: 0,
     issuer: { name: issuer.name, did: issuer.did, baseUrl: issuer.baseUrl },
     brands: brandNodes.map((n, i) => ({
       id: "brand" + (i + 1),
@@ -129,14 +132,17 @@ async function doTransfer(state, from, to, amount, stage, memo) {
   return r;
 }
 
+// Token name is chosen by the server per session (not user input): LOYALTY,
+// then LOYALTY-1, LOYALTY-2, ... bumped on each reset for guaranteed uniqueness.
+export function sessionTokenName(state) {
+  const n = state.tokenSeq || 0;
+  return n > 0 ? `LOYALTY-${n}` : "LOYALTY";
+}
+
 // ── Stage 1: Issue ─────────────────────────────────────────────────────────────
-export async function runStage1(state, { tokenName, count, startIndex, ft_num_start_index }) {
-  if (!tokenName || !count) throw new Error("tokenName and count required");
-  // one token per session: re-minting the SAME name (top-up) is fine, but a
-  // different name would orphan the tokens already in play, so block it.
-  if (state.token.name && state.token.name !== tokenName) {
-    throw new Error(`session token is already "${state.token.name}" — Reset the demo to mint a different token`);
-  }
+export async function runStage1(state, { count, startIndex, ft_num_start_index } = {}) {
+  if (!count) throw new Error("count required");
+  const tokenName = sessionTokenName(state); // server-assigned, unique per session
   const tokenCount = Math.ceil(Number(count) / 1000); // whole RBT to back the FTs (1000 FT / RBT)
   // Continue past the last used index unless an explicit start is given.
   const start = Number(startIndex ?? ft_num_start_index ?? state.mintCursor ?? 0);
