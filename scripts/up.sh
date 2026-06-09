@@ -12,7 +12,7 @@ export EXTERNAL_IP
 docker compose up -d --build
 echo
 echo "Stack starting (first run downloads the node binary + builds images — a few minutes)."
-echo "UI:   http://${EXTERNAL_IP:-localhost}:8080"
+echo "UI:   http://${EXTERNAL_IP:-localhost}:4000"
 echo "Logs: docker compose logs -f orchestrator"
-echo "Open firewall: 8080/tcp (UI); 4001-4010/tcp only for inbound RBT from external nodes."
+echo "Open firewall: 4000/tcp (UI); 4001-4010/tcp only for inbound RBT from external nodes."
 echo "Then fund node1 (issuer) + node7/node8 (quorums) with test RBT."

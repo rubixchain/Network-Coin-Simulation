@@ -10,8 +10,8 @@ COPY orchestrator/rubix.mjs orchestrator/stages.mjs orchestrator/server-v2.mjs \
      orchestrator/wait-nodes.mjs orchestrator/entrypoint.sh ./
 COPY orchestrator/public-v2 ./public-v2
 
-ENV PORT=8080 DATA_DIR=/data NODE_HOST=localhost
+ENV PORT=4000 DATA_DIR=/data NODE_HOST=localhost
 RUN mkdir -p /data && chmod +x entrypoint.sh
 
-EXPOSE 8080
+EXPOSE 4000
 ENTRYPOINT ["sh", "entrypoint.sh"]

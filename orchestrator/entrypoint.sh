@@ -19,5 +19,5 @@ fi
 echo "[orch] wiring network (register + setup/addquorum, idempotent)"
 node wire-network.mjs || echo "[orch] wire-network reported issues — continuing"
 
-echo "[orch] starting UI + API on :${PORT:-8080}"
+echo "[orch] starting UI + API on :${PORT:-4000}"
 exec node server-v2.mjs

@@ -1,7 +1,7 @@
 # Network Coin Simulation — full stack in one command.
 #
 #   docker compose up -d --build      # 10 rubix nodes + 10 postgres + demo UI
-#   open http://localhost:8080
+#   open http://localhost:4000
 #
 # The node image downloads the official rubixgoplatform v1.0.0 release binary
 # (override with RUBIX_VERSION / RUBIX_NODE_IMAGE in .env) — no Go source needed.
@@ -289,7 +289,7 @@ services:
     container_name: ncs-orchestrator
     network_mode: host
     environment:
-      PORT: "8080"
+      PORT: "4000"
       DATA_DIR: /data
       NODE_HOST: localhost
     volumes: ["./data/orchestrator:/data"]

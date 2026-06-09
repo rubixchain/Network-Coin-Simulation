@@ -5,7 +5,7 @@
 //
 // Run:
 //   cd orchestrator && npm install && node server-v2.mjs
-//   open http://localhost:8080
+//   open http://localhost:4000
 
 import express from "express";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
@@ -21,7 +21,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = process.env.DATA_DIR || __dirname; // persisted registry + entities (volume in-container)
 const registry = JSON.parse(readFileSync(join(DATA_DIR, "node_registry.json"), "utf8"));
 const STATE_FILE = join(DATA_DIR, "entities.json");
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 4000;
 
 let state = existsSync(STATE_FILE)
   ? JSON.parse(readFileSync(STATE_FILE, "utf8"))

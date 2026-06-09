@@ -19,7 +19,7 @@ binary — no Go source or build toolchain required.
 | node9, node10 | **customer wallets** (many DIDs) | 20008–20009 / 4009–4010 / 5441–5442 |
 
 The orchestrator (backend + UI) runs as an 11th container on the host network and
-serves the demo on **port 8080**.
+serves the demo on **port 4000**.
 
 ## Quick start
 
@@ -30,7 +30,7 @@ serves the demo on **port 8080**.
 ./scripts/up.sh            # if Docker is already installed
 ```
 
-Open **http://<host>:8080**. First boot downloads the node binary, builds the
+Open **http://<host>:4000**. First boot downloads the node binary, builds the
 images, starts 10 nodes, creates one DID per node, and wires the quorums
 (several minutes). Then **fund** node1 (issuer) and node7/node8 (quorums) with
 test RBT before running the stages.
