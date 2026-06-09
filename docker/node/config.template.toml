@@ -1,0 +1,28 @@
+[core]
+node_index = 0
+network_mode = "${NETWORK_MODE}"
+
+[db]
+host = "${DB_HOST}"
+port = ${DB_PORT}
+username = "rubix"
+password = "rubixpass"
+db_name = "${DB_NAME}"
+
+[db.config]
+max_connections = 50
+min_connections = 10
+max_connection_lifetime_seconds = 60
+max_connection_idletime_seconds = 30
+statement_timeout_seconds = 20
+
+[ipfs]
+mainnet_bootstrap_nodes = [
+	"/ip4/172.188.67.118/tcp/4001/p2p/12D3KooWMvgneC9omYaHyKVkFUf1wKCqtMnVqEopTGT1CTGacUEm",
+]
+testnet_bootstrap_nodes = [
+  "/ip4/98.70.52.158/tcp/4001/p2p/12D3KooWNrfpqpSWi4N1WL9Xv8j87hm7nBMqJ3vWWp3qJ3d2MJp8",
+  "/ip4/103.209.145.177/tcp/4011/p2p/12D3KooWKAHAYEjjckeWi2s3oCnvkbTJX3x6fV3HZbjMEVzMfJeL",
+]
+localnet_bootstrap_nodes = [
+]

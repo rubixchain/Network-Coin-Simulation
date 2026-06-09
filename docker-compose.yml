@@ -1,0 +1,307 @@
+# Network Coin Simulation — full stack in one command.
+#
+#   docker compose up -d --build      # 10 rubix nodes + 10 postgres + demo UI
+#   open http://localhost:8080
+#
+# The node image downloads the official rubixgoplatform v1.0.0 release binary
+# (override with RUBIX_VERSION / RUBIX_NODE_IMAGE in .env) — no Go source needed.
+# node1 carries the build; nodes 2-10 reuse the same image tag.
+
+x-node-health: &nodeHealth
+  test: ["CMD", "bash", "-c", "</dev/tcp/localhost/20000"]
+  interval: 10s
+  timeout: 5s
+  retries: 30
+  start_period: 30s
+
+x-pg-health: &pgHealth
+  test: ["CMD-SHELL", "pg_isready -U rubix"]
+  interval: 5s
+  timeout: 3s
+  retries: 5
+
+networks:
+  ncs-net:
+    driver: bridge
+
+services:
+
+  # ─── node1 (FT issuer) — builds the shared node image ─────────────────────
+  node1-postgres:
+    image: postgres:16
+    container_name: ncs-node1-postgres
+    environment: { POSTGRES_USER: rubix, POSTGRES_PASSWORD: rubixpass, POSTGRES_DB: rubix_1 }
+    volumes: ["./data/node1/db:/var/lib/postgresql/data"]
+    networks: [ncs-net]
+    healthcheck: *pgHealth
+    ports: ["5433:5432"]
+  node1:
+    build:
+      context: ./docker/node
+      args: { RUBIX_VERSION: "${RUBIX_VERSION:-v1.0.0}" }
+    image: ${RUBIX_NODE_IMAGE:-network-coin/rubix-node:v1.0.0}
+    container_name: ncs-node1
+    depends_on: { node1-postgres: { condition: service_healthy } }
+    environment:
+      NETWORK_MODE: ${NETWORK_MODE:-testnet}
+      DB_HOST: node1-postgres
+      DB_PORT: 5432
+      DB_NAME: rubix_1
+      RUBIX_EXTERNAL_IP: ${EXTERNAL_IP:-}
+      RUBIX_EXTERNAL_SWARM_PORT: "4001"
+    ports: ["20000:20000", "4001:4002"]
+    volumes: ["./data/node1/app:/app/data", "./swarm:/swarm"]
+    networks: [ncs-net]
+    healthcheck: *nodeHealth
+
+  # ─── node2 (brand) ────────────────────────────────────────────────────────
+  node2-postgres:
+    image: postgres:16
+    container_name: ncs-node2-postgres
+    environment: { POSTGRES_USER: rubix, POSTGRES_PASSWORD: rubixpass, POSTGRES_DB: rubix_2 }
+    volumes: ["./data/node2/db:/var/lib/postgresql/data"]
+    networks: [ncs-net]
+    healthcheck: *pgHealth
+    ports: ["5434:5432"]
+  node2:
+    image: ${RUBIX_NODE_IMAGE:-network-coin/rubix-node:v1.0.0}
+    container_name: ncs-node2
+    depends_on: { node2-postgres: { condition: service_healthy }, node1: { condition: service_started } }
+    environment:
+      NETWORK_MODE: ${NETWORK_MODE:-testnet}
+      DB_HOST: node2-postgres
+      DB_PORT: 5432
+      DB_NAME: rubix_2
+      RUBIX_EXTERNAL_IP: ${EXTERNAL_IP:-}
+      RUBIX_EXTERNAL_SWARM_PORT: "4002"
+    ports: ["20001:20000", "4002:4002"]
+    volumes: ["./data/node2/app:/app/data", "./swarm:/swarm"]
+    networks: [ncs-net]
+    healthcheck: *nodeHealth
+
+  # ─── node3 (brand) ────────────────────────────────────────────────────────
+  node3-postgres:
+    image: postgres:16
+    container_name: ncs-node3-postgres
+    environment: { POSTGRES_USER: rubix, POSTGRES_PASSWORD: rubixpass, POSTGRES_DB: rubix_3 }
+    volumes: ["./data/node3/db:/var/lib/postgresql/data"]
+    networks: [ncs-net]
+    healthcheck: *pgHealth
+    ports: ["5435:5432"]
+  node3:
+    image: ${RUBIX_NODE_IMAGE:-network-coin/rubix-node:v1.0.0}
+    container_name: ncs-node3
+    depends_on: { node3-postgres: { condition: service_healthy }, node1: { condition: service_started } }
+    environment:
+      NETWORK_MODE: ${NETWORK_MODE:-testnet}
+      DB_HOST: node3-postgres
+      DB_PORT: 5432
+      DB_NAME: rubix_3
+      RUBIX_EXTERNAL_IP: ${EXTERNAL_IP:-}
+      RUBIX_EXTERNAL_SWARM_PORT: "4003"
+    ports: ["20002:20000", "4003:4002"]
+    volumes: ["./data/node3/app:/app/data", "./swarm:/swarm"]
+    networks: [ncs-net]
+    healthcheck: *nodeHealth
+
+  # ─── node4 (brand) ────────────────────────────────────────────────────────
+  node4-postgres:
+    image: postgres:16
+    container_name: ncs-node4-postgres
+    environment: { POSTGRES_USER: rubix, POSTGRES_PASSWORD: rubixpass, POSTGRES_DB: rubix_4 }
+    volumes: ["./data/node4/db:/var/lib/postgresql/data"]
+    networks: [ncs-net]
+    healthcheck: *pgHealth
+    ports: ["5436:5432"]
+  node4:
+    image: ${RUBIX_NODE_IMAGE:-network-coin/rubix-node:v1.0.0}
+    container_name: ncs-node4
+    depends_on: { node4-postgres: { condition: service_healthy }, node1: { condition: service_started } }
+    environment:
+      NETWORK_MODE: ${NETWORK_MODE:-testnet}
+      DB_HOST: node4-postgres
+      DB_PORT: 5432
+      DB_NAME: rubix_4
+      RUBIX_EXTERNAL_IP: ${EXTERNAL_IP:-}
+      RUBIX_EXTERNAL_SWARM_PORT: "4004"
+    ports: ["20003:20000", "4004:4002"]
+    volumes: ["./data/node4/app:/app/data", "./swarm:/swarm"]
+    networks: [ncs-net]
+    healthcheck: *nodeHealth
+
+  # ─── node5 (brand) ────────────────────────────────────────────────────────
+  node5-postgres:
+    image: postgres:16
+    container_name: ncs-node5-postgres
+    environment: { POSTGRES_USER: rubix, POSTGRES_PASSWORD: rubixpass, POSTGRES_DB: rubix_5 }
+    volumes: ["./data/node5/db:/var/lib/postgresql/data"]
+    networks: [ncs-net]
+    healthcheck: *pgHealth
+    ports: ["5437:5432"]
+  node5:
+    image: ${RUBIX_NODE_IMAGE:-network-coin/rubix-node:v1.0.0}
+    container_name: ncs-node5
+    depends_on: { node5-postgres: { condition: service_healthy }, node1: { condition: service_started } }
+    environment:
+      NETWORK_MODE: ${NETWORK_MODE:-testnet}
+      DB_HOST: node5-postgres
+      DB_PORT: 5432
+      DB_NAME: rubix_5
+      RUBIX_EXTERNAL_IP: ${EXTERNAL_IP:-}
+      RUBIX_EXTERNAL_SWARM_PORT: "4005"
+    ports: ["20004:20000", "4005:4002"]
+    volumes: ["./data/node5/app:/app/data", "./swarm:/swarm"]
+    networks: [ncs-net]
+    healthcheck: *nodeHealth
+
+  # ─── node6 (brand) ────────────────────────────────────────────────────────
+  node6-postgres:
+    image: postgres:16
+    container_name: ncs-node6-postgres
+    environment: { POSTGRES_USER: rubix, POSTGRES_PASSWORD: rubixpass, POSTGRES_DB: rubix_6 }
+    volumes: ["./data/node6/db:/var/lib/postgresql/data"]
+    networks: [ncs-net]
+    healthcheck: *pgHealth
+    ports: ["5438:5432"]
+  node6:
+    image: ${RUBIX_NODE_IMAGE:-network-coin/rubix-node:v1.0.0}
+    container_name: ncs-node6
+    depends_on: { node6-postgres: { condition: service_healthy }, node1: { condition: service_started } }
+    environment:
+      NETWORK_MODE: ${NETWORK_MODE:-testnet}
+      DB_HOST: node6-postgres
+      DB_PORT: 5432
+      DB_NAME: rubix_6
+      RUBIX_EXTERNAL_IP: ${EXTERNAL_IP:-}
+      RUBIX_EXTERNAL_SWARM_PORT: "4006"
+    ports: ["20005:20000", "4006:4002"]
+    volumes: ["./data/node6/app:/app/data", "./swarm:/swarm"]
+    networks: [ncs-net]
+    healthcheck: *nodeHealth
+
+  # ─── node7 (quorum) ───────────────────────────────────────────────────────
+  node7-postgres:
+    image: postgres:16
+    container_name: ncs-node7-postgres
+    environment: { POSTGRES_USER: rubix, POSTGRES_PASSWORD: rubixpass, POSTGRES_DB: rubix_7 }
+    volumes: ["./data/node7/db:/var/lib/postgresql/data"]
+    networks: [ncs-net]
+    healthcheck: *pgHealth
+    ports: ["5439:5432"]
+  node7:
+    image: ${RUBIX_NODE_IMAGE:-network-coin/rubix-node:v1.0.0}
+    container_name: ncs-node7
+    depends_on: { node7-postgres: { condition: service_healthy }, node1: { condition: service_started } }
+    environment:
+      NETWORK_MODE: ${NETWORK_MODE:-testnet}
+      DB_HOST: node7-postgres
+      DB_PORT: 5432
+      DB_NAME: rubix_7
+      RUBIX_EXTERNAL_IP: ${EXTERNAL_IP:-}
+      RUBIX_EXTERNAL_SWARM_PORT: "4007"
+    ports: ["20006:20000", "4007:4002"]
+    volumes: ["./data/node7/app:/app/data", "./swarm:/swarm"]
+    networks: [ncs-net]
+    healthcheck: *nodeHealth
+
+  # ─── node8 (quorum) ───────────────────────────────────────────────────────
+  node8-postgres:
+    image: postgres:16
+    container_name: ncs-node8-postgres
+    environment: { POSTGRES_USER: rubix, POSTGRES_PASSWORD: rubixpass, POSTGRES_DB: rubix_8 }
+    volumes: ["./data/node8/db:/var/lib/postgresql/data"]
+    networks: [ncs-net]
+    healthcheck: *pgHealth
+    ports: ["5440:5432"]
+  node8:
+    image: ${RUBIX_NODE_IMAGE:-network-coin/rubix-node:v1.0.0}
+    container_name: ncs-node8
+    depends_on: { node8-postgres: { condition: service_healthy }, node1: { condition: service_started } }
+    environment:
+      NETWORK_MODE: ${NETWORK_MODE:-testnet}
+      DB_HOST: node8-postgres
+      DB_PORT: 5432
+      DB_NAME: rubix_8
+      RUBIX_EXTERNAL_IP: ${EXTERNAL_IP:-}
+      RUBIX_EXTERNAL_SWARM_PORT: "4008"
+    ports: ["20007:20000", "4008:4002"]
+    volumes: ["./data/node8/app:/app/data", "./swarm:/swarm"]
+    networks: [ncs-net]
+    healthcheck: *nodeHealth
+
+  # ─── node9 (customer wallet) ──────────────────────────────────────────────
+  node9-postgres:
+    image: postgres:16
+    container_name: ncs-node9-postgres
+    environment: { POSTGRES_USER: rubix, POSTGRES_PASSWORD: rubixpass, POSTGRES_DB: rubix_9 }
+    volumes: ["./data/node9/db:/var/lib/postgresql/data"]
+    networks: [ncs-net]
+    healthcheck: *pgHealth
+    ports: ["5441:5432"]
+  node9:
+    image: ${RUBIX_NODE_IMAGE:-network-coin/rubix-node:v1.0.0}
+    container_name: ncs-node9
+    depends_on: { node9-postgres: { condition: service_healthy }, node1: { condition: service_started } }
+    environment:
+      NETWORK_MODE: ${NETWORK_MODE:-testnet}
+      DB_HOST: node9-postgres
+      DB_PORT: 5432
+      DB_NAME: rubix_9
+      RUBIX_EXTERNAL_IP: ${EXTERNAL_IP:-}
+      RUBIX_EXTERNAL_SWARM_PORT: "4009"
+    ports: ["20008:20000", "4009:4002"]
+    volumes: ["./data/node9/app:/app/data", "./swarm:/swarm"]
+    networks: [ncs-net]
+    healthcheck: *nodeHealth
+
+  # ─── node10 (customer wallet) ─────────────────────────────────────────────
+  node10-postgres:
+    image: postgres:16
+    container_name: ncs-node10-postgres
+    environment: { POSTGRES_USER: rubix, POSTGRES_PASSWORD: rubixpass, POSTGRES_DB: rubix_10 }
+    volumes: ["./data/node10/db:/var/lib/postgresql/data"]
+    networks: [ncs-net]
+    healthcheck: *pgHealth
+    ports: ["5442:5432"]
+  node10:
+    image: ${RUBIX_NODE_IMAGE:-network-coin/rubix-node:v1.0.0}
+    container_name: ncs-node10
+    depends_on: { node10-postgres: { condition: service_healthy }, node1: { condition: service_started } }
+    environment:
+      NETWORK_MODE: ${NETWORK_MODE:-testnet}
+      DB_HOST: node10-postgres
+      DB_PORT: 5432
+      DB_NAME: rubix_10
+      RUBIX_EXTERNAL_IP: ${EXTERNAL_IP:-}
+      RUBIX_EXTERNAL_SWARM_PORT: "4010"
+    ports: ["20009:20000", "4010:4002"]
+    volumes: ["./data/node10/app:/app/data", "./swarm:/swarm"]
+    networks: [ncs-net]
+    healthcheck: *nodeHealth
+
+  # ─── orchestrator (demo backend + UI) ─────────────────────────────────────
+  # Host network so it reaches the nodes via their published ports (20000-20009).
+  orchestrator:
+    build:
+      context: .
+      dockerfile: docker/orchestrator/Dockerfile
+    image: network-coin/orchestrator:latest
+    container_name: ncs-orchestrator
+    network_mode: host
+    environment:
+      PORT: "8080"
+      DATA_DIR: /data
+      NODE_HOST: localhost
+    volumes: ["./data/orchestrator:/data"]
+    depends_on:
+      node1:  { condition: service_healthy }
+      node2:  { condition: service_healthy }
+      node3:  { condition: service_healthy }
+      node4:  { condition: service_healthy }
+      node5:  { condition: service_healthy }
+      node6:  { condition: service_healthy }
+      node7:  { condition: service_healthy }
+      node8:  { condition: service_healthy }
+      node9:  { condition: service_healthy }
+      node10: { condition: service_healthy }
+    restart: unless-stopped

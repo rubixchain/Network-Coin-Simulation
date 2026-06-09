@@ -1,0 +1,19 @@
+{
+  "name": "rubix-ft-simulator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Simulation platform for Rubix FT creation and transfer across a 10-node cluster",
+  "scripts": {
+    "start": "node server.mjs",
+    "start:v2": "node server-v2.mjs",
+    "bootstrap": "node bootstrap-dids.mjs",
+    "wire": "node wire-network.mjs"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
